@@ -402,6 +402,10 @@ exports.renderResetPasswordPage = (req, res) => {
                     <label for="confirm-password">Confirm Password</label>
                     <input type="password" id="confirm-password" required minlength="6" placeholder="••••••••">
                 </div>
+                <div class="form-group" style="display: flex; align-items: center; margin-bottom: 24px;">
+                    <input type="checkbox" id="show-passwords-check" style="width: auto; margin-right: 8px;">
+                    <label for="show-passwords-check" style="display: inline; font-size: 13px; cursor: pointer; margin-bottom: 0; user-select: none;">Show Passwords</label>
+                </div>
                 <button type="submit">Update Password</button>
             </form>
             <div id="error-msg" class="error"></div>
@@ -418,6 +422,15 @@ exports.renderResetPasswordPage = (req, res) => {
         const errorMsg = document.getElementById('error-msg');
         const formContainer = document.getElementById('form-container');
         const successContainer = document.getElementById('success-container');
+        const showPasswordsCheck = document.getElementById('show-passwords-check');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+
+        showPasswordsCheck.addEventListener('change', () => {
+            const type = showPasswordsCheck.checked ? 'text' : 'password';
+            passwordInput.type = type;
+            confirmPasswordInput.type = type;
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
