@@ -5,6 +5,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import FormInput from '../../src/components/FormInput';
 import PrimaryButton from '../../src/components/PrimaryButton';
 import Colors from '../../constants/Colors';
+import { Feather } from '@expo/vector-icons';
 
 export default function Login() {
   const { login } = useAuth();
@@ -29,6 +30,9 @@ export default function Login() {
           <Text style={styles.successText}>✓ Email verified! You can now log in.</Text>
         </View>
       )}
+      <View style={{ alignItems: 'flex-start', marginBottom: 24 }}>
+        <Feather name="shield" size={44} color={Colors.primary} style={{ marginBottom: 16 }} />
+      </View>
       <Text style={styles.title}>Welcome back</Text>
       <Text style={styles.subtitle}>Sign in to your account</Text>
       <FormInput label="Email" value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} keyboardType="email-address" autoCapitalize="none" placeholder="you@example.com" />

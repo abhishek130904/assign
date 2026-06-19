@@ -5,6 +5,7 @@ import { authApi } from '../../src/api/auth.api';
 import FormInput from '../../src/components/FormInput';
 import PrimaryButton from '../../src/components/PrimaryButton';
 import Colors from '../../constants/Colors';
+import { Feather } from '@expo/vector-icons';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
@@ -35,6 +36,9 @@ export default function Register() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+      <View style={{ alignItems: 'flex-start', marginBottom: 20 }}>
+        <Feather name="user-plus" size={44} color={Colors.primary} style={{ marginBottom: 16 }} />
+      </View>
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Sign up to get started</Text>
       <FormInput label="Full Name" value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} placeholder="John Doe" error={errors.name} />
