@@ -34,12 +34,12 @@ export default function Dashboard() {
         <Row label="Email" value={data?.email} />
         <Row label="Role" value={
           <View style={[styles.badge, data?.role === 'admin' ? styles.badgeAdmin : styles.badgeUser]}>
-            <Text style={styles.badgeText}>{data?.role}</Text>
+            <Text style={[styles.badgeText, data?.role === 'admin' ? styles.textAdmin : styles.textUser]}>{data?.role}</Text>
           </View>
         } />
         <Row label="Email Verified" value={
           <View style={[styles.badge, data?.isEmailVerified ? styles.badgeSuccess : styles.badgeWarn]}>
-            <Text style={styles.badgeText}>{data?.isEmailVerified ? 'Verified' : 'Not Verified'}</Text>
+            <Text style={[styles.badgeText, data?.isEmailVerified ? styles.textSuccess : styles.textWarn]}>{data?.isEmailVerified ? 'Verified' : 'Not Verified'}</Text>
           </View>
         } />
       </View>
@@ -67,11 +67,15 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 14, color: Colors.textSecondary },
   rowValue: { fontSize: 14, color: Colors.text, fontWeight: '500' },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  badgeAdmin: { backgroundColor: '#EDE9FE' },
-  badgeUser: { backgroundColor: '#DBEAFE' },
-  badgeSuccess: { backgroundColor: '#DCFCE7' },
-  badgeWarn: { backgroundColor: '#FEF9C3' },
-  badgeText: { fontSize: 12, fontWeight: '600', color: Colors.text },
+  badgeAdmin: { backgroundColor: '#4F46E525' },
+  badgeUser: { backgroundColor: '#3B82F625' },
+  badgeSuccess: { backgroundColor: '#10B98125' },
+  badgeWarn: { backgroundColor: '#F59E0B25' },
+  badgeText: { fontSize: 12, fontWeight: '600' },
+  textAdmin: { color: '#818CF8' },
+  textUser: { color: '#60A5FA' },
+  textSuccess: { color: '#34D399' },
+  textWarn: { color: '#FBBF24' },
   logoutBtn: { marginTop: 32, backgroundColor: Colors.error, borderRadius: 8, height: 48, justifyContent: 'center', alignItems: 'center' },
   logoutText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 });
