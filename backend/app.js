@@ -21,12 +21,19 @@ const allowedOrigins = [
   process.env.ADMIN_URL,
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:5173',
+  'http://localhost:5174',
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    // Allow requests with no origin (mobile apps, Postman)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin) return cb(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      origin.startsWith('http://localhost:') || 
+                      origin.endsWith('.vercel.app');
+                      
+    if (isAllowed) return cb(null, true);
     cb(new Error('CORS not allowed'));
   },
   credentials: true,
