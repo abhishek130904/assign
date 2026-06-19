@@ -11,7 +11,7 @@
 | Resource | URL |
 |----------|-----|
 | **Backend API** | https://assign-tfx3.onrender.com |
-| **Admin Dashboard** | https://assign-admin.vercel.app |
+| **Admin Dashboard** | https://assign-rho-liart.vercel.app |
 | **APK Download** | https://expo.dev/accounts/abhishek130904/projects/auth-app/builds/d0344f5c-6bb6-4db5-b090-181841a73f3a |
 | **IPA** | Not available — requires Apple Developer account ($99/yr) |
 
