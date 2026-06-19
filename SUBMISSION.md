@@ -12,7 +12,7 @@
 |----------|-----|
 | **Backend API** | https://assign-tfx3.onrender.com |
 | **Admin Dashboard** | https://assign-admin.vercel.app |
-| **APK Download** | *(EAS Build link — paste here)* |
+| **APK Download** | https://expo.dev/accounts/abhishek130904/projects/auth-app/builds/d0344f5c-6bb6-4db5-b090-181841a73f3a |
 | **IPA** | Not available — requires Apple Developer account ($99/yr) |
 
 > **Note:** Backend is on Render free tier. First request may take 30–50s (cold start). Subsequent requests are instant.
