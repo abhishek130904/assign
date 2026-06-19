@@ -15,8 +15,6 @@
 | **APK Download** | https://expo.dev/accounts/abhishek130904/projects/auth-app/builds/d8a1bd82-adce-47f6-948e-06370a83ebcc |
 | **IPA** | Not available — requires Apple Developer account ($99/yr) |
 
-> **Note:** Backend is on Render free tier. First request may take 30–50s (cold start). Subsequent requests are instant.
-
 ---
 
 ## Test Credentials
