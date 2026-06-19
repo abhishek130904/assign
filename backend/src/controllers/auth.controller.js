@@ -65,10 +65,61 @@ exports.verifyEmail = async (req, res, next) => {
     if (!otpDoc) return res.status(400).json({ error: 'Invalid or expired OTP' });
     if (otpDoc.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
 
-    await User.findOneAndUpdate({ email: email.toLowerCase() }, { isEmailVerified: true });
+    const user = await User.findOneAndUpdate({ email: email.toLowerCase() }, { isEmailVerified: true }, { new: true });
     await OtpToken.deleteMany({ email: email.toLowerCase(), purpose: 'email_verification' });
 
-    res.json({ message: 'Email verified successfully' });
+    const accessToken = generateAccessToken(user._id, user.role);
+    const rawRefreshToken = generateRefreshToken();
+
+    // Store hashed refresh token in DB (7-day expiry)
+    await RefreshToken.create({
+      userId: user._id,
+      tokenHash: hashToken(rawRefreshToken),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.json({
+      message: 'Email verified successfully',
+      accessToken,
+      refreshToken: rawRefreshToken,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, isEmailVerified: user.isEmailVerified }
+    });
+  } catch (err) { next(err); }
+};
+
+// POST /api/auth/verify-login
+exports.verifyLogin = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+
+    const otpDoc = await OtpToken.findOne({
+      email: email.toLowerCase(),
+      purpose: 'login_mfa',
+      expiresAt: { $gt: new Date() },
+    });
+    if (!otpDoc) return res.status(400).json({ error: 'Invalid or expired OTP' });
+    if (otpDoc.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !user.isActive) return res.status(401).json({ error: 'User not found or inactive' });
+
+    await OtpToken.deleteMany({ email: email.toLowerCase(), purpose: 'login_mfa' });
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    const rawRefreshToken = generateRefreshToken();
+
+    await RefreshToken.create({
+      userId: user._id,
+      tokenHash: hashToken(rawRefreshToken),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.json({
+      accessToken,
+      refreshToken: rawRefreshToken,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, isEmailVerified: user.isEmailVerified }
+    });
   } catch (err) { next(err); }
 };
 
@@ -108,20 +159,41 @@ exports.login = async (req, res, next) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const accessToken = generateAccessToken(user._id, user.role);
-    const rawRefreshToken = generateRefreshToken();
+    // If it's the admin, bypass MFA OTP to keep admin panel integration simple
+    if (user.role === 'admin') {
+      const accessToken = generateAccessToken(user._id, user.role);
+      const rawRefreshToken = generateRefreshToken();
 
-    // Store hashed refresh token in DB (7-day expiry)
-    await RefreshToken.create({
+      await RefreshToken.create({
+        userId: user._id,
+        tokenHash: hashToken(rawRefreshToken),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      return res.json({
+        accessToken,
+        refreshToken: rawRefreshToken,
+        user: { id: user._id, name: user.name, email: user.email, role: user.role, isEmailVerified: user.isEmailVerified },
+      });
+    }
+
+    // Generate login OTP for regular users
+    const otp = generateOtp();
+    await OtpToken.deleteMany({ email: user.email.toLowerCase(), purpose: 'login_mfa' });
+    await OtpToken.create({
       userId: user._id,
-      tokenHash: hashToken(rawRefreshToken),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      email: user.email.toLowerCase(),
+      otp,
+      purpose: 'login_mfa',
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
     });
 
+    await sendOtpEmail(user.email, otp);
+
     res.json({
-      accessToken,
-      refreshToken: rawRefreshToken, // Mobile stores this in SecureStore
-      user: { id: user._id, name: user.name, email: user.email, role: user.role, isEmailVerified: user.isEmailVerified },
+      requiresOtp: true,
+      email: user.email,
+      message: 'OTP sent to your email. Please verify to complete login.'
     });
   } catch (err) { next(err); }
 };

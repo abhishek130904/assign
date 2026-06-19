@@ -7,6 +7,7 @@ router.post('/register', registerValidator, ctrl.register);
 router.post('/verify-email', ctrl.verifyEmail);
 router.post('/resend-otp', ctrl.resendOtp);
 router.post('/login', loginValidator, ctrl.login);
+router.post('/verify-login', ctrl.verifyLogin);
 router.post('/refresh-token', ctrl.refreshToken);
 router.post('/logout', ctrl.logout);
 router.post('/forgot-password', ctrl.forgotPassword);

@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authApi } from '../../src/api/auth.api';
+import { useAuth } from '../../src/context/AuthContext';
 import OtpInput from '../../src/components/OtpInput';
 import PrimaryButton from '../../src/components/PrimaryButton';
 import Colors from '../../constants/Colors';
+import { Feather } from '@expo/vector-icons';
 
 const RESEND_COOLDOWN = 60;
 
 export default function VerifyEmail() {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { email, purpose } = useLocalSearchParams<{ email: string; purpose?: string }>();
+  const isMfa = purpose === 'login_mfa';
+  const { setTokens } = useAuth();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
@@ -25,8 +29,21 @@ export default function VerifyEmail() {
     if (otp.length < 6) return Alert.alert('Error', 'Enter the 6-digit code');
     setLoading(true);
     try {
-      await authApi.verifyEmail(email, otp);
-      router.replace({ pathname: '/(auth)/login', params: { verified: '1' } });
+      const data = isMfa
+        ? await authApi.verifyLogin(email, otp)
+        : await authApi.verifyEmail(email, otp);
+
+      if (data.accessToken && data.refreshToken && data.user) {
+        await setTokens(data.accessToken, data.refreshToken, {
+          id: data.user.id || data.user._id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+        });
+        router.replace('/(app)/dashboard');
+      } else {
+        router.replace({ pathname: '/(auth)/login', params: { verified: '1' } });
+      }
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.error || 'Verification failed');
     } finally { setLoading(false); }
@@ -34,7 +51,7 @@ export default function VerifyEmail() {
 
   const resend = async () => {
     try {
-      await authApi.resendOtp(email, 'email_verification');
+      await authApi.resendOtp(email, isMfa ? 'login_mfa' : 'email_verification');
       setCountdown(RESEND_COOLDOWN);
       Alert.alert('Sent', 'A new OTP has been sent to your email.');
     } catch (err: any) {
@@ -44,10 +61,13 @@ export default function VerifyEmail() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Verify your email</Text>
-      <Text style={styles.subtitle}>We sent a 6-digit code to {'\n'}<Text style={styles.email}>{email}</Text></Text>
+      <View style={{ alignItems: 'flex-start', marginBottom: 20 }}>
+        <Feather name={isMfa ? "shield" : "mail"} size={44} color={Colors.primary} style={{ marginBottom: 16 }} />
+      </View>
+      <Text style={styles.title}>{isMfa ? 'Security Code' : 'Verify your email'}</Text>
+      <Text style={styles.subtitle}>We sent a security code to {'\n'}<Text style={styles.email}>{email}</Text></Text>
       <OtpInput value={otp} onChange={setOtp} />
-      <PrimaryButton title="Verify Email" onPress={verify} loading={loading} style={styles.btn} />
+      <PrimaryButton title={isMfa ? "Confirm Sign In" : "Verify Email"} onPress={verify} loading={loading} style={styles.btn} />
       <TouchableOpacity onPress={resend} disabled={countdown > 0} style={styles.resend}>
         <Text style={[styles.resendText, countdown > 0 ? styles.resendDisabled : null]}>
           {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}

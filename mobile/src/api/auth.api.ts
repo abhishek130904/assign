@@ -20,6 +20,10 @@ export const authApi = {
     const { data } = await axios.post(`${BASE}/api/auth/login`, { email, password });
     return data;
   },
+  verifyLogin: async (email: string, otp: string) => {
+    const { data } = await axios.post(`${BASE}/api/auth/verify-login`, { email, otp });
+    return data;
+  },
   refreshToken: async (refreshToken: string) => {
     const { data } = await axios.post(`${BASE}/api/auth/refresh-token`, { refreshToken });
     return data;

@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { authApi } from '../../src/api/auth.api';
 import FormInput from '../../src/components/FormInput';
 import PrimaryButton from '../../src/components/PrimaryButton';
 import Colors from '../../constants/Colors';
 import { Feather } from '@expo/vector-icons';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { setTokens } = useAuth();
   const params = useLocalSearchParams<{ verified?: string }>();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -16,8 +17,18 @@ export default function Login() {
   const submit = async () => {
     setLoading(true);
     try {
-      await login(form.email, form.password);
-      router.replace('/(app)/dashboard');
+      const data = await authApi.login(form.email, form.password);
+      if (data.requiresOtp) {
+        router.push({ pathname: '/(auth)/verify-email', params: { email: form.email, purpose: 'login_mfa' } });
+      } else {
+        await setTokens(data.accessToken, data.refreshToken, {
+          id: data.user.id || data.user._id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+        });
+        router.replace('/(app)/dashboard');
+      }
     } catch (err: any) {
       Alert.alert('Login Failed', err.response?.data?.error || 'Something went wrong');
     } finally { setLoading(false); }
