@@ -5,7 +5,7 @@ const otpTokenSchema = new mongoose.Schema({
   email: { type: String, required: true, lowercase: true },
   // NOTE: In production, OTP should also be hashed (bcrypt/SHA-256) before storing
   otp: { type: String, required: true },
-  purpose: { type: String, enum: ['email_verification', 'password_reset'], required: true },
+  purpose: { type: String, enum: ['email_verification', 'password_reset', 'login_mfa'], required: true },
   expiresAt: { type: Date, required: true },
   createdAt: { type: Date, default: Date.now },
 });
