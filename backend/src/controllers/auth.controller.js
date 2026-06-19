@@ -253,7 +253,7 @@ exports.forgotPassword = async (req, res, next) => {
         expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       });
       const deepLink = `yourapp://reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
-      const webLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
+      const webLink = `${process.env.BACKEND_URL || 'https://assign-tfx3.onrender.com'}/api/auth/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
       await sendPasswordResetEmail(email, deepLink, webLink);
     }
     res.json({ message: 'If this email is registered, you will receive a reset link.' });
@@ -285,4 +285,176 @@ exports.resetPassword = async (req, res, next) => {
 
     res.json({ message: 'Password reset successful' });
   } catch (err) { next(err); }
+};
+
+// GET /api/auth/reset-password
+exports.renderResetPasswordPage = (req, res) => {
+  const { email, token } = req.query;
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0B0F19;
+            color: #F1F5F9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background-color: #151B2C;
+            border: 1px solid #1F293D;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        p {
+            color: #94A3B8;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #94A3B8;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background-color: #0B0F19;
+            border: 1px solid #1F293D;
+            border-radius: 8px;
+            color: #F1F5F9;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #6366F1;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4F46E5;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8px;
+        }
+        button:hover {
+            background-color: #4338CA;
+        }
+        .error {
+            color: #EF4444;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+        .success {
+            color: #10B981;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div id="form-container">
+            <h2>Reset Password</h2>
+            <p>Enter a secure new password for your account.</p>
+            <form id="reset-form">
+                <input type="hidden" id="email" value="${email || ''}">
+                <input type="hidden" id="token" value="${token || ''}">
+                <div class="form-group">
+                    <label for="password">New Password</label>
+                    <input type="password" id="password" required minlength="6" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" required minlength="6" placeholder="••••••••">
+                </div>
+                <button type="submit">Update Password</button>
+            </form>
+            <div id="error-msg" class="error"></div>
+        </div>
+        <div id="success-container" class="success">
+            <svg style="width: 48px; height: 48px; margin: 0 auto 16px; color: #10B981;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h2>Success!</h2>
+            <p>Your password has been reset successfully. You can now log in using your new password in the mobile app.</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('reset-form');
+        const errorMsg = document.getElementById('error-msg');
+        const formContainer = document.getElementById('form-container');
+        const successContainer = document.getElementById('success-container');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+
+            const email = document.getElementById('email').value;
+            const token = document.getElementById('token').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+                errorMsg.innerText = "Passwords do not match";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, token, newPassword: password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    formContainer.style.display = 'none';
+                    successContainer.style.display = 'block';
+                } else {
+                    errorMsg.innerText = data.error || 'Something went wrong';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.innerText = 'Failed to connect to the server';
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>`);
 };

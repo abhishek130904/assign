@@ -1,150 +1,172 @@
-# Submission Package
+# Internship Assignment Submission — Full-Stack Mobile Authentication App
+
+**Submitted by:** Abhishek Raj  
+**Date:** 20 June 2026  
+**GitHub Repository:** https://github.com/abhishek130904/assign
+
+---
+
+## Live Links
+
+| Resource | URL |
+|----------|-----|
+| **Backend API** | https://assign-tfx3.onrender.com |
+| **Admin Dashboard** | https://assign-admin.vercel.app |
+| **APK Download** | *(EAS Build link — paste here)* |
+| **IPA** | Not available — requires Apple Developer account ($99/yr) |
+
+> **Note:** Backend is on Render free tier. First request may take 30–50s (cold start). Subsequent requests are instant.
+
+---
 
 ## Test Credentials
 
-**Backend API:** `https://assign-tfx3.onrender.com`  
-**Admin Dashboard:** `https://[YOUR-ADMIN].vercel.app`  
-**APK Download:** [EAS Build link after running `eas build --platform android --profile preview`]
-
 | Account | Email | Password |
 |---------|-------|----------|
-| Regular User | testuser@example.com | TestUser123 |
 | Admin | admin@test.com | AdminPassword123 |
-
-> ⚠️ Backend is on Render free tier. First request takes 30–50s (cold start). Subsequent requests are fast.
-
----
-
-## Manual Test Checklist
-
-### Mobile App
-- [ ] Register → OTP email received < 60s
-- [ ] Wrong OTP → error shown
-- [ ] Correct OTP → redirected to login
-- [ ] Resend OTP → countdown works → new OTP arrives
-- [ ] Resend 4× → rate limit error
-- [ ] Login with unverified email → "Please verify your email"
-- [ ] Login with wrong password → "Invalid credentials"
-- [ ] Login success → dashboard loads
-- [ ] Dashboard shows name, email, role, verified status
-- [ ] Logout → back to login, SecureStore cleared
-- [ ] Login again → works
-- [ ] Forgot password → email received
-- [ ] Deep link opens reset form in app
-- [ ] Mismatched passwords → validation error
-- [ ] Valid reset → login with new password works
-- [ ] Old session invalidated after reset
-
-### Admin Dashboard
-- [ ] Non-admin login → "Admin access only"
-- [ ] Admin login → stats page loads
-- [ ] Stats show correct counts
-- [ ] Users list with pagination
-- [ ] Name/email search works (debounced)
-- [ ] Role filter works
-- [ ] Active/Inactive filter works
-- [ ] Toggle inactive → confirm → user deactivated
-- [ ] Deactivated user login → "Account deactivated"
-- [ ] Toggle active → login works again
-- [ ] Change role → role updated
-- [ ] User detail shows active session count
-- [ ] Admin logout → back to login
+| Regular User | *(Register a new user via the APK to test the full OTP flow)* | |
 
 ---
 
-## Architecture Explanation (for submission email)
+## Application Overview
 
-This full-stack mobile application is built with React Native (Expo SDK 51) for the mobile client, Node.js + Express for the REST API backend, MongoDB Atlas for the database, and a separate React + Vite admin dashboard.
+A production-grade mobile authentication application demonstrating secure user management, MFA, and admin controls.
 
-**Authentication Flow:** JWT-based with short-lived access tokens (15 minutes, stored in React Context / memory only) and long-lived refresh tokens (7 days). On mobile, the refresh token is stored in `expo-secure-store` (AES-256 encrypted), never in AsyncStorage which is unencrypted. Token rotation is implemented — each refresh issues a new pair.
+### Tech Stack
 
-**OTP Flow:** On registration, a 6-digit OTP is generated using `crypto.randomInt`, saved with a 10-minute TTL index in MongoDB (auto-deleted by Atlas), and sent via Resend. Rate-limited to 3 resends per hour per email.
-
-**Password Reset:** Uses a 32-byte random hex token, SHA-256 hashed before storage. Reset link includes both a deep link (`yourapp://`) for the mobile app and a web fallback. On reset, all existing refresh tokens for that user are revoked.
-
-**Admin Panel:** Separate React + Vite web app communicating with the same backend. Protected by role-based middleware. Admin tokens stored in localStorage (acceptable for internal tools).
-
-**Security Measures:** bcrypt (12 rounds) for passwords, `helmet` for HTTP headers, `express-mongo-sanitize` against NoSQL injection, `express-rate-limit` (10 req/15min on auth routes), `express-validator` for input validation, SHA-256 hashing for all tokens stored in DB.
-
-**MongoDB TTL Indexes** automatically clean up expired OTPs, refresh tokens, and password reset tokens — no cron job needed.
+| Layer | Technology |
+|-------|-----------|
+| Mobile App | React Native (Expo SDK 54) + expo-router |
+| Backend API | Node.js + Express.js |
+| Database | MongoDB Atlas |
+| Admin Dashboard | React + Vite + TypeScript |
+| Email Service | Brevo (Sendinblue) |
+| Hosting | Render (backend), Vercel (admin), EAS Build (APK) |
 
 ---
 
-## Submission Email (ready to send)
+## Authentication & Security Architecture
+
+### 1. User Registration + OTP Verification
+- User registers with name, email, password
+- 6-digit OTP generated via `crypto.randomInt` and sent via Brevo email
+- OTP stored in MongoDB with **10-minute TTL index** (auto-deleted by Atlas)
+- On successful verification → **auto-login** (JWT tokens issued immediately)
+- Rate limited: max 3 OTP resends per hour per email
+
+### 2. Login with MFA (Multi-Factor Authentication)
+- User enters email + password → validated against bcrypt-12 hash
+- If valid → **login OTP sent to email** (second factor)
+- User enters OTP → tokens issued, session created
+- Admin users bypass MFA for dashboard compatibility
+
+### 3. JWT Token Architecture
+- **Access Token:** 15-minute expiry, stored in React Context (memory only — never persisted)
+- **Refresh Token:** 7-day expiry, stored in `expo-secure-store` (AES-256 encrypted on device)
+- **Token Rotation:** Each refresh request issues a new token pair and revokes the old one
+- **All tokens SHA-256 hashed** before database storage
+
+### 4. Password Reset
+- 32-byte random hex token, SHA-256 hashed before storage
+- Reset link includes deep link (`yourapp://`) + web fallback
+- On reset, **all existing refresh tokens are revoked** for security
+
+### 5. Security Measures
+| Measure | Implementation |
+|---------|---------------|
+| Password Hashing | bcrypt (12 rounds) |
+| HTTP Security Headers | helmet.js |
+| NoSQL Injection Prevention | express-mongo-sanitize |
+| Rate Limiting | express-rate-limit (10 req/15min on auth routes) |
+| Input Validation | express-validator |
+| Token Storage | SHA-256 hashed in DB |
+| CORS | Whitelist-based with Vercel/Render auto-allow |
+| Proxy Trust | Configured for Render reverse proxy |
+
+### 6. Database Design
+- **MongoDB TTL Indexes** on OtpToken, RefreshToken, and PasswordResetToken — automatic cleanup with zero cron jobs
+- Indexes on email + purpose for fast OTP lookups
+- User model with role-based access control (user/admin)
+
+---
+
+## Admin Dashboard Features
+- Secure admin-only login (role check enforced)
+- Dashboard stats: total users, verified users, active sessions
+- User management: search, filter by role/status, pagination
+- Toggle user active/inactive status
+- Change user roles
+- View per-user active session count
+- Premium dark-mode UI with glassmorphism design
+
+---
+
+## Mobile App Features
+- Premium dark-indigo themed UI with Feather icons
+- Registration with real-time validation
+- OTP input with auto-focus between digits
+- Login MFA with security code verification
+- Dashboard with profile info and role badges
+- Forgot password + reset flow
+- Secure logout with token revocation
+- Pull-to-refresh and loading states
+
+---
+
+## Project Structure
 
 ```
-Subject: Internship Assignment Submission — Full-Stack Mobile App
-
-Dear Sanjib,
-
-I am pleased to submit my internship assignment: a full-stack mobile application with React Native (Expo), Node.js backend, MongoDB, and a React admin dashboard.
-
-LIVE LINKS:
-- Backend API: https://assign-tfx3.onrender.com
-- Admin Dashboard: https://[VERCEL_URL].vercel.app
-- APK Download: https://expo.dev/artifacts/[EAS_BUILD_ID]
-- IPA: Note — IPA for real device requires Apple Developer account ($99/yr). APK is provided instead.
-
-TEST CREDENTIALS:
-Regular User: testuser@example.com / TestUser123
-Admin User:   admin@test.com / AdminPassword123
-
-NOTE: Backend on Render free tier — first request may take 30–50 seconds (cold start). All subsequent requests are fast.
-
-IMPLEMENTED FEATURES:
-✓ User registration with email + OTP verification (10 min expiry)
-✓ JWT auth: 15-min access token (memory) + 7-day refresh token (SecureStore)
-✓ Token rotation on refresh, full revocation on logout/password reset
-✓ Resend OTP with rate limiting (3/hour per email)
-✓ Forgot password with deep link + web fallback
-✓ Secure password reset (SHA-256 hashed tokens)
-✓ Admin dashboard: user management, role control, stats
-✓ MongoDB TTL indexes for automatic token cleanup
-✓ Security: bcrypt 12 rounds, helmet, CORS, mongoSanitize, rate limiting
-✓ APK via EAS Build (Android)
-
-ARCHITECTURE:
-React Native (Expo SDK 51) + expo-router for navigation
-Node.js + Express REST API deployed on Render
-MongoDB Atlas with TTL indexes
-Resend for transactional emails
-React + Vite admin dashboard on Vercel
-
-Please do not hesitate to reach out if you have any questions.
-
-Best regards,
-[Your Name]
+assign/
+├── backend/          # Node.js + Express REST API
+│   ├── src/
+│   │   ├── controllers/   # Auth, User, Admin controllers
+│   │   ├── models/        # User, OtpToken, RefreshToken, PasswordResetToken
+│   │   ├── middlewares/   # Auth, rate limiter, error handler
+│   │   ├── routes/        # Auth, User, Admin routes
+│   │   ├── utils/         # Token generation, email sending
+│   │   └── scripts/       # Admin seeding script
+│   └── app.js
+├── mobile/           # React Native (Expo) mobile app
+│   ├── app/
+│   │   ├── (auth)/        # Login, Register, Verify, Forgot/Reset password
+│   │   └── (app)/         # Dashboard (protected)
+│   └── src/
+│       ├── api/           # API client with interceptors
+│       ├── components/    # FormInput, PrimaryButton, OtpInput
+│       └── context/       # AuthContext (token management)
+└── admin/            # React + Vite admin dashboard
+    └── src/
+        ├── pages/         # Login, Stats, Users, UserDetail
+        ├── context/       # AdminAuthContext
+        └── api/           # Admin API client
 ```
 
 ---
 
-## EAS Build Commands
+## How to Run Locally
 
+### Backend
 ```bash
-# Install EAS CLI
-npm install -g eas-cli
+cd backend
+npm install
+cp .env.example .env   # Configure environment variables
+npm run dev
+```
 
-# Login
-eas login
-
-# Build APK (Android, downloadable)
+### Mobile
+```bash
 cd mobile
-eas build --platform android --profile preview
-
-# Build IPA (iOS — requires Apple Developer account)
-eas build --platform ios --profile preview
-
-# Download: check https://expo.dev → your project → Builds
+npm install
+npx expo start
 ```
 
-## Generate JWT Secret
-
+### Admin
 ```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+cd admin
+npm install
+npm run dev
 ```
 
-## Seed Admin (Render Shell)
+---
 
-```bash
-ADMIN_EMAIL=admin@yourdomain.com ADMIN_PASSWORD=YourPass123 node src/scripts/seedAdmin.js
-```
+*Thank you for the opportunity. I look forward to hearing from you.*

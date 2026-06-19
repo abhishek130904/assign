@@ -11,6 +11,7 @@ router.post('/verify-login', ctrl.verifyLogin);
 router.post('/refresh-token', ctrl.refreshToken);
 router.post('/logout', ctrl.logout);
 router.post('/forgot-password', ctrl.forgotPassword);
+router.get('/reset-password', ctrl.renderResetPasswordPage);
 router.post('/reset-password', resetPasswordValidator, ctrl.resetPassword);
 
 module.exports = router;
