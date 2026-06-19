@@ -11,6 +11,7 @@ const { authLimiter, globalLimiter } = require('./src/middlewares/rateLimiter');
 const errorHandler = require('./src/middlewares/errorHandler');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security headers
 app.use(helmet());
