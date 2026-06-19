@@ -2,14 +2,14 @@
 
 ## Test Credentials
 
-**Backend API:** `https://[YOUR-SERVICE].onrender.com`  
+**Backend API:** `https://assign-tfx3.onrender.com`  
 **Admin Dashboard:** `https://[YOUR-ADMIN].vercel.app`  
 **APK Download:** [EAS Build link after running `eas build --platform android --profile preview`]
 
 | Account | Email | Password |
 |---------|-------|----------|
 | Regular User | testuser@example.com | TestUser123 |
-| Admin | admin@yourdomain.com | [your ADMIN_PASSWORD] |
+| Admin | admin@test.com | AdminPassword123 |
 
 > ⚠️ Backend is on Render free tier. First request takes 30–50s (cold start). Subsequent requests are fast.
 
@@ -80,14 +80,14 @@ Dear Sanjib,
 I am pleased to submit my internship assignment: a full-stack mobile application with React Native (Expo), Node.js backend, MongoDB, and a React admin dashboard.
 
 LIVE LINKS:
-- Backend API: https://[RENDER_URL].onrender.com
+- Backend API: https://assign-tfx3.onrender.com
 - Admin Dashboard: https://[VERCEL_URL].vercel.app
 - APK Download: https://expo.dev/artifacts/[EAS_BUILD_ID]
 - IPA: Note — IPA for real device requires Apple Developer account ($99/yr). APK is provided instead.
 
 TEST CREDENTIALS:
 Regular User: testuser@example.com / TestUser123
-Admin User:   admin@[your-domain].com / [ADMIN_PASSWORD]
+Admin User:   admin@test.com / AdminPassword123
 
 NOTE: Backend on Render free tier — first request may take 30–50 seconds (cold start). All subsequent requests are fast.
 
