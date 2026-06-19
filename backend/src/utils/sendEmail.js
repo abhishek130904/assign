@@ -1,19 +1,33 @@
-const resend = require('../config/email');
-
 /**
- * Send an email via Resend. Errors are logged but not thrown
+ * Send an email via Brevo API. Errors are logged but not thrown
  * so that email failure doesn't crash the auth flow.
  */
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL,
-      to,
-      subject,
-      html,
+    console.log(`[Email] Sending to: ${to}, subject: "${subject}"`);
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: 'AuthApp', email: process.env.BREVO_FROM_EMAIL },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html
+      })
     });
+    
+    const data = await response.json();
+    if (!response.ok) {
+        console.error('[Email] Brevo error:', JSON.stringify(data));
+    } else {
+        console.log('[Email] Sent successfully:', JSON.stringify(data));
+    }
   } catch (err) {
-    console.error('Email send error:', err.message);
+    console.error('[Email] Send error:', err.message);
   }
 };
 

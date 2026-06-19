@@ -22,22 +22,22 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
-      <div className="card" style={{ width: 380, padding: 40 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>⚙️ Admin Login</h1>
-        <p style={{ color: '#64748B', marginBottom: 24, fontSize: 14 }}>Sign in to access the dashboard</p>
+    <div className="login-wrapper">
+      <div className="login-card">
+        <h1>🔐 Admin Panel</h1>
+        <p className="subtitle">Sign in to access the dashboard</p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={submit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Email</label>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#94A3B8' }}>Email</label>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="admin@example.com" style={{ width: '100%' }} required />
           </div>
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Password</label>
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#94A3B8' }}>Password</label>
             <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" style={{ width: '100%' }} required />
           </div>
-          <button className="btn btn-primary" style={{ width: '100%', height: 40 }} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button className="btn btn-primary" style={{ width: '100%', height: 44, fontSize: 15, justifyContent: 'center' }} disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In →'}
           </button>
         </form>
       </div>
